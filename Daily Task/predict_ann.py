@@ -1,17 +1,22 @@
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # hide TF info messages
-
 import numpy as np
+import joblib
 from tensorflow import keras
 
-# Load trained model
+# Load trained model and scalers
 model = keras.models.load_model("ann_model.keras")
+scaler_x = joblib.load("scaler_x.joblib")
+scaler_y = joblib.load("scaler_y.joblib")
 
-# Take x input from user
-x_val = float(input("Enter x (in radians): "))
+# Get user input
+x_input = float(input("Enter x (in radians): "))
 
-# Predict y
-x_input = np.array([[x_val]])
-y_pred = model.predict(x_input, verbose=0)
+# Scale input
+x_scaled = scaler_x.transform([[x_input]])
 
-print(f"Predicted y value: {y_pred[0][0]}")
+# Predict (scaled)
+y_pred_scaled = model.predict(x_scaled)
+
+# Convert back to original scale
+y_pred = scaler_y.inverse_transform(y_pred_scaled)
+
+print(f"Predicted y value for x={x_input:.4f}: {y_pred[0][0]:.6f}")
